@@ -5,7 +5,7 @@ from color_format import basicConfig
 
 from os import environ as env
 from aiohttp import WSMessage
-from aiohttp.web import WebSocketResponse, WSMsgType
+from aiohttp.web import WebSocketResponse, WSMsgType, Application, run_app, get
 from ujson import loads
 from logging import getLogger, DEBUG
 
@@ -55,4 +55,8 @@ async def worker_connection(request):
                 logger.warning(f"Node {worker_info['name']} got rate-limited. Route: {event_data}")
     connected_workers -= 1
     workers.remove(worker_info)
+
+app = Application()
+app.add_routes([get("/workers", worker_connection)])
+run_app(app, host="0.0.0.0", port=6060)
 
