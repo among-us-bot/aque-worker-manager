@@ -44,15 +44,18 @@ async def worker_connection(request):
                 guild_workers[event_data] = current_workers
             elif event_name == "identify":
                 worker_info = {
-                    "name": worker_descriptions[connection_num]["name"],
-                    "token": worker_descriptions[connection_num]["token"],
+                    "name": worker_descriptions[connection_num-1]["name"],
+                    "token": worker_descriptions[connection_num-1]["token"],
                     "ws": ws
                 }
                 workers.append(worker_info)
                 logger.info(f"Worker with name {worker_info['name']} identified, sending token!")
                 await ws.send_json({
                     "t": "dispatch_bot_info",
-                    "d": worker_info
+                    "d": {
+                        "name": worker_info["name"],
+                        "token": worker_info["token"]
+                    }
                 })
                 logger.info("Sent token!")
                 connection_lock.release()
