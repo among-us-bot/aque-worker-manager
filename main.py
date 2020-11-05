@@ -40,7 +40,7 @@ async def worker_connection(request):
             event_data = data["d"]
 
             if event_name == "add_guild":
-                current_workers = guild_workers.get(event_data, {})
+                current_workers = guild_workers.get(event_data, [])
                 current_workers.append(ws)
                 guild_workers[event_data] = current_workers
             elif event_name == "identify":
