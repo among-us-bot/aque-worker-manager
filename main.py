@@ -41,7 +41,7 @@ async def worker_connection(request):
 
             if event_name == "add_guild":
                 current_workers = guild_workers.get(event_data, [])
-                current_workers.append(ws)
+                current_workers.append(worker_info)
                 guild_workers[event_data] = current_workers
             elif event_name == "remove_guild":
                 guild_workers[event_data].remove(ws)
