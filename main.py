@@ -7,7 +7,7 @@ from os import environ as env
 from asyncio import Lock
 from aiohttp import WSMessage
 from aiohttp.web import WebSocketResponse, WSMsgType, Application, run_app, get
-from ujson import loads
+from ujson import loads, dumps
 from logging import getLogger, DEBUG
 from random import choice
 
@@ -81,7 +81,7 @@ async def controller_connection(request):
                 guild_id = event_data["guild_id"]
                 available_workers = guild_workers[guild_id]
                 worker = choice(available_workers)
-                await worker["ws"].send_json(event_data["data"])
+                await worker["ws"].send_json(data, dumps=dumps)
 
 app = Application()
 app.add_routes([get("/workers", worker_connection), get("/controller", controller_connection)])
