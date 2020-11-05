@@ -81,7 +81,10 @@ async def controller_connection(request):
 
             if event_name == "request":
                 guild_id = event_data["guild_id"]
-                available_workers = guild_workers[guild_id]
+                available_workers = guild_workers.get(guild_id, None)
+                if available_workers is None:
+                    logger.warning(f"Guild \"{guild_id}\" has no active workers! Dismissing request")
+                    continue
                 worker = choice(available_workers)
                 await worker["ws"].send_json(data, dumps=dumps)
 
