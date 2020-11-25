@@ -19,6 +19,7 @@ connected_workers = 0
 connection_lock = Lock()
 guild_workers = {}
 workers = []
+used_worker_ids = []
 
 worker_descriptions = loads(env["WORKER_TOKENS"])
 
@@ -30,8 +31,15 @@ async def worker_connection(request):
 
     await connection_lock.acquire()
     msg: WSMessage
-    connected_workers += 1
-    connection_num = connected_workers
+    unused_worker_ids = list(range(len(worker_descriptions)))
+    for used_worker_id in used_worker_ids:
+        unused_worker_ids.remove(used_worker_id)
+    if len(unused_worker_ids) == 0:
+        connection_lock.release()
+        await ws.close(message=b"All tokens already assigned")
+    worker_id = unused_worker_ids[0]
+    used_worker_ids.append(worker_id)
+
     worker_info = {}
     async for msg in ws:
         if msg.type == WSMsgType.TEXT:
@@ -47,12 +55,12 @@ async def worker_connection(request):
                 guild_workers[event_data].remove(ws)
             elif event_name == "identify":
                 worker_info = {
-                    "name": worker_descriptions[connection_num - 1]["name"],
-                    "token": worker_descriptions[connection_num - 1]["token"],
+                    "name": worker_descriptions[worker_id]["name"],
+                    "token": worker_descriptions[worker_id]["token"],
                     "ws": ws
                 }
                 workers.append(worker_info)
-                logger.info(f"Worker with name {worker_info['name']} identified, sending token!")
+                logger.info(f"Worker with name {worker_info['name']} worker id {worker_id} identified, sending token!")
                 await ws.send_json({
                     "t": "dispatch_bot_info",
                     "d": {
@@ -65,7 +73,9 @@ async def worker_connection(request):
             elif event_name == "ratelimit":
                 logger.warning(f"Node {worker_info['name']} got rate-limited. Route: {event_data}")
     connected_workers -= 1
+    used_worker_ids.remove(worker_id)
     workers.remove(worker_info)
+    logger.warning(f"Worker with name {worker_info} and worker id {worker_id} disconnected.")
 
 
 async def controller_connection(request):
