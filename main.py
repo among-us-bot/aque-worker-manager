@@ -2,6 +2,7 @@
 Created by Epic at 11/1/20
 """
 from color_format import basicConfig
+from analytics import track
 
 from os import environ as env
 from asyncio import Lock
@@ -10,6 +11,7 @@ from aiohttp.web import WebSocketResponse, WSMsgType, Application, run_app, get
 from ujson import loads, dumps
 from logging import getLogger, DEBUG
 from random import choice
+from base64 import b64encode
 
 logger = getLogger("worker-manager")
 basicConfig(logger)
@@ -71,7 +73,8 @@ async def worker_connection(request):
                 logger.info("Sent token!")
                 connection_lock.release()
             elif event_name == "ratelimit":
-                logger.warning(f"Node {worker_info['name']} got rate-limited. Route: {event_data}")
+                await track(f"ratelimited_{event_data['guild']}", 1)
+                logger.warning(f"Node {worker_info['name']} got rate-limited. Route: {event_data['route']}")
     connected_workers -= 1
     used_worker_ids.remove(worker_id)
     workers.remove(worker_info)
@@ -91,8 +94,10 @@ async def controller_connection(request):
 
             if event_name == "request":
                 guild_id = event_data["guild_id"]
+                await track(f"worker_requests_{guild_id}", 1)
                 available_workers = guild_workers.get(guild_id, None)
                 if available_workers is None:
+                    await track(f"not_enough_workers_{guild_id}", 1)
                     logger.warning(f"Guild \"{guild_id}\" has no active workers! Dismissing request")
                     continue
                 worker = choice(available_workers)
