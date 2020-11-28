@@ -13,7 +13,7 @@ from logging import getLogger, DEBUG
 from random import choice
 
 logger = getLogger("worker-manager")
-basicConfig(logger)
+basicConfig(getLogger())
 logger.setLevel(DEBUG)
 
 connected_workers = 0
