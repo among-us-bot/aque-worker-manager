@@ -7,7 +7,7 @@ from os import environ as env
 from collections import defaultdict
 from time import time
 
-analytics_url = f"https://{env['DELIVERY_HOST']}:5050/api/:NAME:/:TYPE:"
+analytics_url = f"http://{env['DELIVERY_HOST']}:5050/api/:NAME:/:TYPE:"
 analytic_histogram_cache = defaultdict(lambda: 0)
 last_push = time()
 
