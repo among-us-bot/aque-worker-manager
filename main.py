@@ -72,7 +72,7 @@ async def worker_connection(request):
                 logger.info("Sent token!")
                 connection_lock.release()
             elif event_name == "ratelimit":
-                await track(f"ratelimited_{event_data['guild']}", 1)
+                await track(f"ratelimited_{event_data['guild']}", 1, analytic_type="histogram")
                 logger.warning(f"Node {worker_info['name']} got rate-limited. Route: {event_data['route']}")
     connected_workers -= 1
     used_worker_ids.remove(worker_id)
@@ -93,10 +93,10 @@ async def controller_connection(request):
 
             if event_name == "request":
                 guild_id = event_data["guild_id"]
-                await track(f"worker_requests_{guild_id}", 1)
+                await track(f"worker_requests_{guild_id}", 1, analytic_type="histogram")
                 available_workers = guild_workers.get(guild_id, None)
                 if available_workers is None:
-                    await track(f"not_enough_workers_{guild_id}", 1)
+                    await track(f"not_enough_workers_{guild_id}", 1, analytic_type="histogram")
                     logger.warning(f"Guild \"{guild_id}\" has no active workers! Dismissing request")
                     continue
                 worker = choice(available_workers)
