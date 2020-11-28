@@ -18,7 +18,9 @@ async def track(key: str, val: int, *, analytic_type="gauge"):
     global last_push
     if analytic_type == "histogram":
         analytic_histogram_cache[key] += 1
+        logger.debug(f"Updating analytics for {key}!")
         if time() + 30 < last_push:
+            logger.debug("Starting histogram analytics update!")
             last_push = time()
             await histogram_push()
         return
