@@ -12,9 +12,11 @@ from ujson import loads, dumps
 from logging import getLogger, DEBUG
 from random import choice
 
+global_logger = getLogger()
+basicConfig(global_logger)
+global_logger.setLevel(DEBUG)
+
 logger = getLogger("worker-manager")
-basicConfig(getLogger())
-logger.setLevel(DEBUG)
 
 connected_workers = 0
 connection_lock = Lock()
