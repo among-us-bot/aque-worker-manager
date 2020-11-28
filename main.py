@@ -11,7 +11,6 @@ from aiohttp.web import WebSocketResponse, WSMsgType, Application, run_app, get
 from ujson import loads, dumps
 from logging import getLogger, DEBUG
 from random import choice
-from base64 import b64encode
 
 logger = getLogger("worker-manager")
 basicConfig(logger)
