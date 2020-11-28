@@ -25,10 +25,11 @@ async def track(key: str, val: int, *, analytic_type="gauge"):
             await histogram_push()
         return
     async with ClientSession() as session:
-        await session.post(analytics_url
-                           .replace(":NAME:", key)
-                           .replace(":TYPE:", analytic_type)
-                           .replace(":VALUE:", str(val)))
+        r = await session.post(analytics_url
+                               .replace(":NAME:", key)
+                               .replace(":TYPE:", analytic_type)
+                               .replace(":VALUE:", str(val)))
+        r.raise_for_status()
         logger.debug(f"Updating analytics for {key}!")
 
 
@@ -36,9 +37,10 @@ async def histogram_push():
     global analytic_histogram_cache
     async with ClientSession() as session:
         for name, value in analytic_histogram_cache.items():
-            await session.post(analytics_url
-                               .replace(":NAME:", name)
-                               .replace(":TYPE:", "histogram")
-                               .replace(":VALUE:", str(value)))
+            r = await session.post(analytics_url
+                                   .replace(":NAME:", name)
+                                   .replace(":TYPE:", "histogram")
+                                   .replace(":VALUE:", str(value)))
+            r.raise_for_status()
         analytic_histogram_cache.clear()
         logger.debug("Updated all histogram analytics!")
