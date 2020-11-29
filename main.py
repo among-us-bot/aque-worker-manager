@@ -109,6 +109,13 @@ async def query(request: Request):
     return json_response(await get_analytic(**request.query))
 
 
+async def track_req(request: Request):
+    q = request.query
+    await track(q["key"], int(q["val"]), analytic_type=q["analytic_type"])
+    return json_response({"status": "ok"})
+
+
 app = Application()
-app.add_routes([get("/workers", worker_connection), get("/controller", controller_connection), get("/query", query)])
+app.add_routes([get("/workers", worker_connection), get("/controller", controller_connection), get("/query", query),
+                get("/track", track_req)])
 run_app(app, host="0.0.0.0", port=6060)
