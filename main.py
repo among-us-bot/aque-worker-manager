@@ -2,12 +2,12 @@
 Created by Epic at 11/1/20
 """
 from color_format import basicConfig
-from analytics import track
+from analytics import track, get_analytic
 
 from os import environ as env
 from asyncio import Lock
 from aiohttp import WSMessage
-from aiohttp.web import WebSocketResponse, WSMsgType, Application, run_app, get
+from aiohttp.web import WebSocketResponse, WSMsgType, Application, run_app, get, Request, json_response
 from ujson import loads, dumps
 from logging import getLogger, DEBUG
 from random import choice
@@ -104,6 +104,11 @@ async def controller_connection(request):
                 worker = choice(available_workers)
                 await worker["ws"].send_json(data, dumps=dumps)
 
+
+async def query(request: Request):
+    return json_response(await get_analytic(**request.query))
+
+
 app = Application()
-app.add_routes([get("/workers", worker_connection), get("/controller", controller_connection)])
+app.add_routes([get("/workers", worker_connection), get("/controller", controller_connection), get("/query", query)])
 run_app(app, host="0.0.0.0", port=6060)

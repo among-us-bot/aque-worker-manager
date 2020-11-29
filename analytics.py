@@ -7,7 +7,9 @@ from os import environ as env
 from collections import defaultdict
 from time import time
 
-analytics_url = f"http://{env['DELIVERY_HOST']}:5050/api/:NAME:/:TYPE:?value=:VALUE:"
+analytics_base_url = f"http://{env['DELIVERY_HOST']}:5050"
+analytics_url = f"{analytics_base_url}/api/:NAME:/:TYPE:?value=:VALUE:"
+analytics_query_url = f"{analytics_base_url}/api/query?query=:QUERY:&start=:START:&end=:END:&step=14"
 analytic_histogram_cache = defaultdict(lambda: 0)
 last_push = time()
 
@@ -31,6 +33,15 @@ async def track(key: str, val: int, *, analytic_type="gauge"):
                                .replace(":VALUE:", str(val)))
         r.raise_for_status()
         logger.debug(f"Updating analytics for {key}!")
+
+
+async def get_analytic(query, start, end):
+    async with ClientSession() as session:
+        r = await session.get(analytics_query_url
+                              .replace(":QUERY:", query)
+                              .replace(":START:", start)
+                              .replace(":END:", end))
+        return await r.json()
 
 
 async def histogram_push():
